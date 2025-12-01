@@ -1,0 +1,16 @@
+# node
+node_modules
+.env
+
+# runtime data
+downloads
+cookies
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
