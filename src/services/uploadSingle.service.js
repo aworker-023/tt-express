@@ -83,7 +83,7 @@ async function getLastStudioVideoLink(page) {
     timeout: 120000,
   })
 
-  await humanSleep(3, 5)
+  await humanSleep(6, 10)
 
   const lastLink = await page.$$eval('a[href*="/video/"]', (els) => {
     const hrefs = els
@@ -126,7 +126,7 @@ export async function uploadSingle(page, videoPath) {
   const input = await page.$(fileInputSelector)
   await input.uploadFile(videoPath)
 
-  await humanSleep(10, 20)
+  await humanSleep(15, 25)
 
   await handleContentCheckDialog(page)
 
@@ -135,7 +135,7 @@ export async function uploadSingle(page, videoPath) {
     return null
   }
 
-  await humanSleep(6, 12)
+  await humanSleep(12, 24)
 
   const lastAfter = await getLastStudioVideoLink(page)
 
