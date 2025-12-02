@@ -24,6 +24,7 @@ export const uploadVideo = async (req, res) => {
 
     const result = await uploadAll(urlList)
 
+    // пока такой вывод
     const textResult = result.results
       .map(item => {
         const links = item.uploads
