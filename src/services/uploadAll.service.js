@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 import { config } from '../config/index.js'
 import { downloadVideo } from './download.service.js'
 import { createTikTokSession } from './browser.service.js'
@@ -29,11 +30,42 @@ function resolveAccountsFromCookiesDir() {
   return jsonFiles.map((fileName) => fileName.replace(/\.json$/i, ''))
 }
 
+// чистим папку загрузок ПЕРЕД новой задачей
+async function cleanDownloadsDir() {
+  const downloadsDir = config.downloadsDir   // ✅ используем тот же путь, что и в download.service
+
+  try {
+    await fs.promises.mkdir(downloadsDir, { recursive: true })
+
+    const entries = await fs.promises.readdir(downloadsDir, {
+      withFileTypes: true,
+    })
+
+    for (const entry of entries) {
+      if (!entry.isFile()) continue
+
+      const fullPath = path.join(downloadsDir, entry.name)
+
+      try {
+        await fs.promises.unlink(fullPath)
+      } catch (e) {
+        console.error('[cleanDownloadsDir] failed to delete:', fullPath, e.message)
+      }
+    }
+  } catch (e) {
+    console.error('[cleanDownloadsDir] error:', e.message)
+  }
+}
+
 export async function uploadAll(urls) {
   if (!Array.isArray(urls) || urls.length === 0) {
     throw new Error('At least one URL is required')
   }
 
+  // чистим старые файлы перед новой задачей
+  await cleanDownloadsDir()
+
+  // 1) скачиваем все видео
   const videos = []
   for (const srcUrl of urls) {
     const downloaded = await downloadVideo(srcUrl)
@@ -44,14 +76,17 @@ export async function uploadAll(urls) {
     })
   }
 
+  // 2) структура результатов по видео
   const allResults = videos.map((v) => ({
     sourceUrl: v.sourceUrl,
     title: v.title,
     uploads: [], // { account, url }
   }))
 
+  // 3) аккаунты — все .json из cookiesDir
   const accounts = resolveAccountsFromCookiesDir()
 
+  // 4) для каждого аккаунта — одна сессия, все видео по очереди
   for (const accountName of accounts) {
     let browser
     try {
@@ -78,6 +113,7 @@ export async function uploadAll(urls) {
         }
       }
     } catch {
+      // если сессия для аккаунта не создалась — null для всех видео
       for (let i = 0; i < videos.length; i++) {
         allResults[i].uploads.push({
           account: accountName,

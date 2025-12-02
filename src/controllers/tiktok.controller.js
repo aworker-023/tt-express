@@ -24,23 +24,24 @@ export const uploadVideo = async (req, res) => {
 
     const result = await uploadAll(urlList)
 
-    // временно чтоб собрать ссылки для отчета
-    console.log(
-      result.results
-        .map(item => {
-          const links = item.uploads
-            .map(u => u.url)
-            .join("\n")
+    const textResult = result.results
+      .map(item => {
+        const links = item.uploads
+          .map(u => u.url)
+          .join("\n")
 
-          return `${item.title}:\n${links}`
-        })
-        .join("\n\n")
-    )
+        return `${item.title}:\n${links}`
+      })
+      .join("\n\n")
 
-    return res.json({
-      status: 'ok',
-      ...result,
-    })
+    return res
+      .set("Content-Type", "text/plain; charset=utf-8")
+      .send(textResult)
+
+    // return res.json({
+    //   status: 'ok',
+    //   ...result,
+    // })
     
   } catch (error) {
     return res.status(500).json({ error: error.message })

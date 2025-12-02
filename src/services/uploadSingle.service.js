@@ -94,8 +94,6 @@ async function getLastStudioVideoLink(page) {
     return hrefs[0] || null
   })
 
-  console.log('lastLink'+ lastLink)
-
   return lastLink
 }
 
@@ -106,19 +104,10 @@ export async function uploadSingle(page, videoPath) {
 
   const lastBefore = await getLastStudioVideoLink(page)
 
-  console.log('lastBefore'+ lastBefore)
-
   await page.goto('https://www.tiktok.com/upload?lang=en', {
     waitUntil: 'networkidle2',
     timeout: 120000,
   })
-
-  // === CHECK 404 AFTER /upload ===
-  const has404AfterUpload = await page.evaluate(() => {
-    const text = document.body.innerText || ''
-    return text.includes('404') || text.toLowerCase().includes('page not found')
-  })
-  console.log('[uploadSingle] 404 after /upload =', has404AfterUpload)
 
   const fileInputSelector = 'input[type="file"]'
   await page.waitForSelector(fileInputSelector, { timeout: 60000 })
@@ -139,8 +128,6 @@ export async function uploadSingle(page, videoPath) {
 
   const lastAfter = await getLastStudioVideoLink(page)
 
-  console.log('lastAfter'+ lastAfter)
-
   let uploadedUrl = null
 
   if (!lastBefore && lastAfter) {
@@ -155,19 +142,10 @@ export async function uploadSingle(page, videoPath) {
 
   if (uploadedUrl) {
 
-    console.log('uploadedUrl'+ uploadedUrl)
-
     await page.goto(uploadedUrl, {
       waitUntil: 'networkidle2',
       timeout: 120000,
     })
-
-    // === CHECK 404 AFTER OPEN VIDEO ===
-    const has404OnVideo = await page.evaluate(() => {
-      const text = document.body.innerText || ''
-      return text.includes('404') || text.toLowerCase().includes('page not found')
-    })
-    console.log('[uploadSingle] 404 on uploaded video page =', has404OnVideo)
 
   }
 
