@@ -32,7 +32,7 @@ function resolveAccountsFromCookiesDir() {
 
 // чистим папку загрузок ПЕРЕД новой задачей
 async function cleanDownloadsDir() {
-  const downloadsDir = config.downloadsDir   // ✅ используем тот же путь, что и в download.service
+  const downloadsDir = config.downloadsDir   // используем тот же путь, что и в download.service
 
   try {
     await fs.promises.mkdir(downloadsDir, { recursive: true })
@@ -86,8 +86,11 @@ export async function uploadAll(urls) {
   // 3) аккаунты — все .json из cookiesDir
   const accounts = resolveAccountsFromCookiesDir()
 
+  console.log('Started uploading videos')
+
   // 4) для каждого аккаунта — одна сессия, все видео по очереди
-  for (const accountName of accounts) {
+  for (const [index, accountName] of accounts.entries()) {
+
     let browser
     try {
       let page
@@ -105,6 +108,12 @@ export async function uploadAll(urls) {
             account: accountName,
             url: uploadedUrl,
           })
+
+          console.log({
+            account: `${index + 1} / ${accounts.length}`,
+            video: `${i + 1} / ${videos.length}`
+          })
+
         } catch {
           allResults[i].uploads.push({
             account: accountName,
@@ -128,6 +137,8 @@ export async function uploadAll(urls) {
       }
     }
   }
+
+  console.log('Completed uploading videos')
 
   return { results: allResults }
 }
